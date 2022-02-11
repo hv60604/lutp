@@ -1,5 +1,9 @@
 # lutp
-Win64 console utility to scan a folder for LUT files, create a presets sub-folder, and populate the sub-folder with a generated OpenFX XML file for each LUT found.  The XML files can then be copied to the Vegas Video OFX-LUT presets folder for use in the NLE application.  
+Win64 console utility to scan a folder for LUT files, create a presets sub-folder, and populate the sub-folder with a generated OpenFX XML file for each LUT found.  The XML files can then be copied to the Vegas Video OFX-LUT presets folder for use in the NLE application.
+
+The XML files created with LutP work with Vegas 17, 18, and 19 by copying them to this Documents folder:
+
+"Documents\OFX Presets\com.vegascreativesoftware_lutfilter\Filter"
 
 The utility requires no installation. It can be run by placing the exe in a folder containing LUT files and clicking on it. Or by opening a Command window and navigating to the LUT folder and invoking it from there.
 

@@ -170,10 +170,10 @@ get_next:
   ; string scan for null char
   lea    rdi, cFname        ; cFname pointer to rdi
   xor    al, al             ; null to al 
-  mov    rcx, -1            ; init for ones complement
-  repne  scasb              ; incr cx till null found
-  not    rcx                ; ones complement negation
-  dec    rcx                ; twos complement - 2 = string length
+  mov    rcx, -1            ; init rcx for ones complement
+  repne  scasb              ; incr rcx till null found - rcx will end up with -(L+2)
+  not    rcx                ; ones complement negation = L+1
+  dec    rcx                ; subtract 1 = string length
   mov    r8, rcx            ; put len in r8 for WriteConsole
   mov    cFileL, rcx        ; save cfile name len
 

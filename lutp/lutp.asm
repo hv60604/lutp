@@ -1,4 +1,9 @@
 ; LUTP  read current directory, create preset subdir, and write Vegas LUT preset xmls for each .cube file
+;
+;  update1: display version 1.0 on console
+;           do not create presets folder if no luts
+;           shorten code by looping on loop_point instead of get_next
+;           minimize make_preset function shadow space... reduce from 80h to 38h (idkw)
 
 extrn    GetStdHandle: PROC
 extrn    SetConsoleMode: PROC
@@ -28,7 +33,7 @@ Console               equ -11
 maxBuf                equ 260
 maxPath               equ 260
 
-wd_msg  byte 'Current working directory: '
+wd_msg  byte 'LutP v1.0',13,10,'Current working directory: '
 
 cdir    byte    '.\*.cube',0
 pDir    byte    'presets',0
@@ -98,6 +103,14 @@ main proc
   mov    qword ptr [rsp+32], rax
   call   WriteConsoleA
 
+
+  lea    rcx, cdir            ; get first file name in cdir
+  lea    rdx, FindFileData
+  call   FindFirstFileA
+ mov    hFind, rax
+ cmp    rax, INVALID_HANDLE_VALUE 
+ je     done                  ; no LUT files found
+
   ; create preset directory
   ;
   ;    c++ def:
@@ -109,11 +122,8 @@ main proc
   lea    rcx, pDir
   xor    rdx, rdx
   call   CreateDirectoryA
-
-  lea    rcx, cdir            ; get first file name in cdir
-  lea    rdx, FindFileData
-  call   FindFirstFileA
-  mov    hFind, rax
+  
+loop_point:
 
   and    dwFileAttributes, 18 ; leave out directories & hidden files
   jnz    get_next
@@ -156,38 +166,7 @@ get_next:
   cmp    rax,0              ; returns 0 if no more
   je     done
 
-  and    dwFileAttributes, 18  ; leave out directories & hidden files
-  jnz    get_next
-
-  mov    rcx, stdout        ; display new line
-  lea    rdx, nl
-  mov    r8, lengthof nl
-  lea    r9, nbwr
-  lea    rax, resv
-  mov    qword ptr [rsp+32], rax
-  call   WriteConsoleA
-
-  ; string scan for null char
-  lea    rdi, cFname        ; cFname pointer to rdi
-  xor    al, al             ; null to al 
-  mov    rcx, -1            ; init rcx for ones complement
-  repne  scasb              ; incr rcx till null found - rcx will end up with -(L+2)
-  not    rcx                ; ones complement negation = L+1
-  dec    rcx                ; subtract 1 = string length
-  mov    r8, rcx            ; put len in r8 for WriteConsole
-  mov    cFileL, rcx        ; save cfile name len
-
-  mov    rcx, stdout        ; display next file name - assume r8 already has the length
-  lea    rdx, cFname
-  lea    r9, nbwr
-  lea    rax, resv
-  mov    qword ptr [rsp+32], rax
-  call   WriteConsoleA
-
-  call   make_preset
- 
- 
-  jmp    get_next
+  jmp    loop_point
 
   done:
   add    rsp, 28h  
@@ -198,7 +177,7 @@ main endp
 
 
 make_preset proc
-    sub    rsp,80h                  ; reserve shadow space on stack
+    sub    rsp,38h                  ; reserve shadow space on stack
     
     ; copy folder name to pName
     lea  rsi, pDir                  ; source
@@ -334,7 +313,7 @@ make_preset proc
     mov  rcx, pHand
     call CloseHandle
 
-    add  rsp,80h                    ; recover shadow space previously allocated on the stack
+    add  rsp,38h                    ; recover shadow space previously allocated on the stack
     ret
     ;
 make_preset endp
